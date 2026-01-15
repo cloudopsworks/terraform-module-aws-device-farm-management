@@ -8,11 +8,11 @@
 #
 
 output "device_farm_project_name" {
-  value = aws_devicefarm_project.this.name
+  value = try(var.settings.desktop, false) ? null : aws_devicefarm_project.this[0].name
 }
 
 output "device_farm_project_arn" {
-  value = aws_devicefarm_project.this.arn
+  value = try(var.settings.desktop, false) ? null : aws_devicefarm_project.this[0].arn
 }
 
 output "device_farm_device_pools" {
@@ -22,4 +22,12 @@ output "device_farm_device_pools" {
       arn  = pool.arn
     }
   }
+}
+
+output "device_farm_desktop_project_name" {
+  value = try(var.settings.desktop, false) ? aws_devicefarm_test_grid_project.this[0].name : null
+}
+
+output "device_farm_desktop_project_arn" {
+  value = try(var.settings.desktop, false) ? aws_devicefarm_test_grid_project.this[0].arn : null
 }
