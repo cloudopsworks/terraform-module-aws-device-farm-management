@@ -6,3 +6,16 @@
 #       WebSite: https://cloudops.works
 #     Distributed Under Apache v2.0 License
 #
+
+variable "settings" {
+  description = "DeviceFARM Settings"
+  type        = any
+  default     = {}
+}
+
+
+variable "vpc" {
+  description = "VPC Configuration details"
+  type        = any
+  default     = {}
+}
