@@ -1,4 +1,4 @@
-name: Terraform Transit Gateway Module
+name: Terraform Device Farm Module
 #logo: logo/logo.jpg
 
 license: "APACHE2"
@@ -8,23 +8,146 @@ copyrights:
     url: "https://cloudops.works"
     year: "2024"
 
-github_repo: cloudopsworks/terraform-module-aws-vpc-setup
+github_repo: cloudopsworks/terraform-module-aws-device-farm-management
 
 description: |-
-  VPC Module for setting up transit gateway with ResourceAccessMananger support.
+  Terraform module to manage AWS Device Farm projects, device pools, network profiles, and instance profiles.
+  It supports both Mobile Device Farm and Desktop Test Grid (Selenium) projects.
 
 # Introduction to the project
-#introduction: |-
-#  This is an introduction.
+introduction: |-
+  This module provides a comprehensive way to manage AWS Device Farm resources using Terraform.
+  It allows for the creation of mobile projects with custom device pools and network profiles,
+  as well as desktop test grid projects integrated with VPC configurations.
 
 # How to use this project
-#usage: |-
+usage: |-
+  To use this module with Terragrunt, include it in your `terragrunt.hcl` file:
+
+  ```hcl
+  terraform {
+    source = "git::https://github.com/cloudopsworks/terraform-module-aws-device-farm-management.git?ref=v1.0.0"
+  }
+
+  inputs = {
+    org = {
+      organization_name = "myorg"
+      organization_unit = "myou"
+      environment_type  = "prod"
+      environment_name  = "production"
+    }
+
+    settings = {
+      name                = "my-mobile-project"
+      job_timeout_minutes = 150
+      device_pools = {
+        android_pool = {
+          name = "android-pool"
+          rules = [
+            {
+              attribute = "PLATFORM"
+              operator  = "EQUALS"
+              value     = "ANDROID"
+            }
+          ]
+        }
+      }
+    }
+  }
+  ```
+
+  ### Variables Structure (YAML)
+  
+  ```yaml
+  # settings:
+  #   name: "my-device-farm"           # (Optional) The name of the Device Farm project. If not provided, it will be generated from name_prefix and system_name.
+  #   name_prefix: "df"                # (Optional) The prefix for the name of the Device Farm project. Default is "".
+  #   desktop: false                   # (Optional) Whether to create a Desktop Test Grid project (true) or a Mobile Device Farm project (false). Default is false.
+  #   job_timeout_minutes: 150         # (Optional) The maximum number of minutes that a test run can execute before it is stopped.
+  #   description: "My project"        # (Optional) The description of the project (used for desktop test grid).
+  #   device_pools:                    # (Optional) A map of device pools to create.
+  #     my_pool:
+  #       name: "my-pool"              # (Optional) The name of the device pool.
+  #       description: "My pool"       # (Optional) The description of the device pool.
+  #       max_devices: 5               # (Optional) The maximum number of devices to allow in the device pool.
+  #       rules:                       # (Optional) A list of rules for the device pool.
+  #         - attribute: "MODEL"       # (Required) The rule's stringified attribute. Valid values: ARN, PLATFORM, FORM_FACTOR, MANUFACTURER, MODEL, AVAILABILITY, REMOTE_ACCESS_ENABLED, APPIUM_VERSION, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE.
+  #           operator: "EQUALS"       # (Required) The rule's operator. Valid values: EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL, IN, NOT_IN, CONTAINS.
+  #           value: "iPhone 12"       # (Required) The rule's value.
+  #       tags: {}                     # (Optional) A map of tags to add to the device pool.
+  #   network_profiles:                # (Optional) A map of network profiles to create.
+  #     my_profile:
+  #       name: "my-profile"           # (Optional) The name of the network profile.
+  #       description: "My profile"    # (Optional) The description of the network profile.
+  #       type: "CURATED"              # (Required) The type of network profile. Valid values: CURATED, PRIVATE.
+  #       downlink:                    # (Optional) The downlink configuration.
+  #         bandwidth_bits: 1024       # (Optional) The downlink bandwidth in bits per second.
+  #         delay_ms: 100              # (Optional) The downlink delay in milliseconds.
+  #         jitter_ms: 10              # (Optional) The downlink jitter in milliseconds.
+  #         loss_percent: 5            # (Optional) The downlink loss percentage (0-100).
+  #       uplink:                      # (Optional) The uplink configuration.
+  #         bandwidth_bits: 1024       # (Optional) The uplink bandwidth in bits per second.
+  #         delay_ms: 100              # (Optional) The uplink delay in milliseconds.
+  #         jitter_ms: 10              # (Optional) The uplink jitter in milliseconds.
+  #         loss_percent: 5            # (Optional) The uplink loss percentage (0-100).
+  #       tags: {}                     # (Optional) A map of tags to add to the network profile.
+  #   instance_profiles:               # (Optional) A map of instance profiles to create.
+  #     my_instance:
+  #       name: "my-instance"          # (Optional) The name of the instance profile.
+  #       description: "My instance"   # (Optional) The description of the instance profile.
+  #       reboot_after_use: true       # (Optional) Whether to reboot the device after a test run.
+  #       cleanup:                     # (Optional) The cleanup configuration.
+  #         enabled: true              # (Optional) Whether to perform package cleanup after a test run.
+  #         excludes: []               # (Optional) A list of app packages to exclude from cleanup.
+  
+  # vpc:
+  #   vpc_id: "vpc-12345"              # (Required if desktop is true) The VPC ID for the Desktop Test Grid project.
+  #   subnet_ids: ["subnet-1", "s-2"]  # (Required if desktop is true) A list of subnet IDs for the Desktop Test Grid project.
+  #   security_group_ids: ["sg-1"]     # (Required if desktop is true) A list of security group IDs for the Desktop Test Grid project.
+  
+  # org:
+  #   organization_name: "myorg"       # (Required) Name of the organization
+  #   organization_unit: "myou"        # (Required) Organizational unit
+  #   environment_type: "prod"         # (Required) Environment type (e.g., prod, dev)
+  #   environment_name: "production"   # (Required) Environment name
+  
+  # extra_tags: {}                   # (Optional) Extra tags to add to the resources
+  # is_hub: false                    # (Optional) Is this a hub or spoke configuration?
+  # spoke_def: "001"                 # (Optional) Spoke ID Number (3 digit string)
+  ```
 
 # Example usage
-#examples: |-
+examples: |-
+  ### Desktop Test Grid with VPC
+  
+  ```hcl
+  inputs = {
+    org = {
+      organization_name = "myorg"
+      organization_unit = "qa"
+      environment_type  = "test"
+      environment_name  = "qa-testing"
+    }
+
+    settings = {
+      name    = "desktop-grid"
+      desktop = true
+    }
+
+    vpc = {
+      vpc_id             = "vpc-0a1b2c3d4e5f6g7h8"
+      subnet_ids         = ["subnet-0a1b2c3d", "subnet-4e5f6g7h"]
+      security_group_ids = ["sg-0a1b2c3d4e5f6g7h8"]
+    }
+  }
+  ```
 
 # How to get started quickly
-#quickstart: |-
+quickstart: |-
+  1. Define your `terragrunt.hcl` and point to this module.
+  2. Configure your `org` and `settings` variables.
+  3. Run `terragrunt plan` to see the resources to be created.
+  4. Run `terragrunt apply` to deploy.
 
 include:
   - "docs/targets.md"
